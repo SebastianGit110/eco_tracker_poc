@@ -1,25 +1,30 @@
-name: Publicacion Automatica
+name: Build and Release
 
 on:
   push:
     tags:
-      - 'v*' # Se activa cuando creas una versión como v1.0
+      - 'v*'
+
+permissions:
+  contents: write
 
 jobs:
   build:
-    name: Compilando para Android y Windows
     runs-on: windows-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v2
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
 
-      - name: Build Android
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build APK
         run: flutter build apk --release
 
       - name: Build Windows
@@ -27,11 +32,9 @@ jobs:
           flutter config --enable-windows-desktop
           flutter build windows --release
 
-      - name: Crear Release y Subir Archivos
+      - name: Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
             build/app/outputs/flutter-apk/app-release.apk
-            build/windows/runner/Release/*.exe
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            build/windows/x64/runner/Release/myapp.exe
